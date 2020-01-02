@@ -1,0 +1,7 @@
+ARG_ENABLE('libpcap', 'libpcap support', 'no');
+
+if (PHP_LIBPCAP != 'no') {
+	AC_DEFINE('HAVE_LIBPCAP', 1, 'libpcap support enabled');
+
+	EXTENSION('libpcap', 'libpcap.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
+}
