@@ -7,6 +7,7 @@
 #include "php.h"
 #include "ext/standard/info.h"
 #include "php_libpcap.h"
+#include "common.h"
 
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
@@ -54,6 +55,18 @@ PHP_RINIT_FUNCTION(libpcap)
 
 	return SUCCESS;
 }
+
+//扩展模块初始化的函数
+PHP_MINIT_FUNCTION(libpcap)
+{
+    //装载我的类
+    CLASS_LOAD(Pcap);
+    //初始化进入
+    pcap_lib_init();
+    //初始化zend和pcap的树
+    init_factory();
+}
+
 /* }}} */
 
 /* {{{ PHP_MINFO_FUNCTION
@@ -91,7 +104,7 @@ zend_module_entry libpcap_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"libpcap",					/* Extension name */
 	libpcap_functions,			/* zend_function_entry */
-	NULL,							/* PHP_MINIT - Module initialization */
+    PHP_MINIT(libpcap),							/* PHP_MINIT - Module initialization */
 	NULL,							/* PHP_MSHUTDOWN - Module shutdown */
 	PHP_RINIT(libpcap),			/* PHP_RINIT - Request initialization */
 	NULL,							/* PHP_RSHUTDOWN - Request shutdown */

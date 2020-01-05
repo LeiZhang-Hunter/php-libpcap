@@ -77,6 +77,13 @@ if test "$PHP_LIBPCAP" != "no"; then
 
   dnl # In case of no dependencies
   AC_DEFINE(HAVE_LIBPCAP, 1, [ Have libpcap support ])
-
-  PHP_NEW_EXTENSION(libpcap, libpcap.c, $ext_shared)
+  PHP_ADD_INCLUDE(./common)
+  PHP_ADD_INCLUDE(./zend)
+  PHP_ADD_INCLUDE(./pcap_tool)
+  PHP_ADD_LIBRARY(pcap,1,LIBPCAP_SHARED_LIBADD)
+  PHP_SUBST(LIBPCAP_SHARED_LIBADD)
+  PHP_NEW_EXTENSION(libpcap, libpcap.c \
+  zend/zend_libpcap.c \
+  zend/zend_pcap.c \
+  pcap_tool/pcap_lib.c, $ext_shared)
 fi
