@@ -28,6 +28,10 @@ typedef struct _pcap_module{
 
 typedef struct ethhdr ether_header;
 
+typedef struct ip ip_header;
+
+typedef struct tcphdr tcp_header;
+
 pcap_module pcap_factory;
 
 PCAP_BOOL pcap_lib_init();

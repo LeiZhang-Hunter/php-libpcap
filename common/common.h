@@ -14,6 +14,8 @@
 #include "zend_libpcap.h"
 #include "zend_pcap.h"
 #include "ether.h"
+#include "ip_struct.h"
+#include "tcp_struct.h"
 
 #define ERROR_BUF "error"
 #define PCAP_CONFIG "config"
@@ -21,7 +23,10 @@
 #define PCAP_MAXPACKET_NUM "max_packet_num"
 #define PCAP_RECV "onRecv"
 
-
+typedef struct _user_param{
+    zval object;
+    zval hook;
+}user_param;
 
 
 
