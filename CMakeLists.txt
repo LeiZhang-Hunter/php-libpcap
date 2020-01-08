@@ -30,7 +30,7 @@ set(SOURCE_FILES
         zend/zend_libpcap.c
         zend/zend_pcap.c
         pcap_tool/pcap_lib.c
-        common/ether.h)
+        common/ether.h common/ip_struct.h common/tcp_struct.h)
 
 add_executable(libpcap ${SOURCE_FILES})
 #CFLAGS='-g -O0'

@@ -6,6 +6,7 @@ $pcap->setConfig([
     "max_packet_num"=>5000
 ]);
 $pcap->onReceive(function($data) use($pcap){
+	var_dump($data);die;
 });
 $r = $pcap->loop();
 var_dump($r);
