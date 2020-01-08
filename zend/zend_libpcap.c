@@ -61,43 +61,56 @@ print_hex_ascii_line(const u_char *payload, int len, int offset)
     int gap;
     const u_char *ch;
 
-//    /* offset */
-//    printf("%05d   ", offset);
-//
-//    /* hex */
-//    ch = payload;
-//    for(i = 0; i < len; i++) {
-//        printf("%02x ", *ch);
-//        ch++;
-//        /* print extra space after 8th byte for visual aid */
-//        if (i == 7)
-//            printf(" ");
-//    }
-//    /* print space to handle line less than 8 bytes */
-//    if (len < 8)
-//        printf(" ");
-//
-//    /* fill hex gap with spaces if not full line */
-//    if (len < 16) {
-//        gap = 16 - len;
-//        for (i = 0; i < gap; i++) {
-//            printf("   ");
-//        }
-//    }
-//    printf("   ");
+    /* offset */
+    printf("%05d   ", offset);
+
+    /* hex */
+    ch = payload;
+    for(i = 0; i < len; i++) {
+        printf("%02x ", *ch);
+        ch++;
+        /* print extra space after 8th byte for visual aid */
+        if (i == 7)
+            printf(" ");
+    }
+    /* print space to handle line less than 8 bytes */
+    if (len < 8)
+        printf(" ");
+
+    /* fill hex gap with spaces if not full line */
+    if (len < 16) {
+        gap = 16 - len;
+        for (i = 0; i < gap; i++) {
+            printf("   ");
+        }
+    }
+    printf("   ");
 
     /* ascii (if printable) */
 //    printf("payload:");
-    ch = payload;
-    for(i = 0; i < len; i++) {
-        if (isprint(*ch))
-            printf("%c", *ch);
-        else
-            printf(".");
-        ch++;
-    }
+//    ch = payload;
+//    register u_char s;
+//    for(i = 0; i < len; i++) {
+//        s = *ch++;
+//
+//        if(s == '\r') {
+//            if(*ch != '\n')
+//            {
+//                php_printf(".");
+//            }
+//
+//
+//        }else{
+//            if(!isprint(s) && s != '\t' && s!= ' ' && s!= '\n')
+//            {
+//                php_printf(".");
+//            }else{
+//                php_printf("%c",s);
+//            }
+//        }
+//    }
 
-    printf("\r\n\r\n");
+//    printf("\r\n\r\n");
 
     return;
 }
@@ -116,39 +129,39 @@ print_payload(const u_char *payload, int len)
     if (len <= 0)
         return;
 
-//    /* data fits on one line */
-//    if (len <= line_width) {
-//        print_hex_ascii_line(ch, len, offset);
-//        return;
-//    }
-//
-//    /* 数据跨越多行 data spans multiple lines */
-//    for ( ;; ) {
-//        /* 计算当前行的长度 | compute current line length */
-//        line_len = line_width % len_rem;
-//
-//        /* 显示分割线 | print line */
-//        print_hex_ascii_line(ch, line_len, offset);
-//
-//        /* 计算总剩余 | compute total remaining */
-//        len_rem = len_rem - line_len;
-//
-//        /* 转移到打印的剩余字节的指针
-//           shift pointer to remaining bytes to print */
-//        ch = ch + line_len;
-//
-//        /* 添加偏移 | add offset */
-//        offset = offset + line_width;
-//
-//        /* 检查是否有线宽字符或更少
-//           check if we have line width chars or less */
-//        if (len_rem <= line_width) {
-//            /* print last line and get out */
-//            print_hex_ascii_line(ch, len_rem, offset);
-//            break;
-//        }
-//    }
-    print_hex_ascii_line(ch, len, offset);
+    /* data fits on one line */
+    if (len <= line_width) {
+        print_hex_ascii_line(ch, len, offset);
+        return;
+    }
+
+    /* 数据跨越多行 data spans multiple lines */
+    for ( ;; ) {
+        /* 计算当前行的长度 | compute current line length */
+        line_len = line_width % len_rem;
+
+        /* 显示分割线 | print line */
+        print_hex_ascii_line(ch, line_len, offset);
+
+        /* 计算总剩余 | compute total remaining */
+        len_rem = len_rem - line_len;
+
+        /* 转移到打印的剩余字节的指针
+           shift pointer to remaining bytes to print */
+        ch = ch + line_len;
+
+        /* 添加偏移 | add offset */
+        offset = offset + line_width;
+
+        /* 检查是否有线宽字符或更少
+           check if we have line width chars or less */
+        if (len_rem <= line_width) {
+            /* print last line and get out */
+            print_hex_ascii_line(ch, len_rem, offset);
+            break;
+        }
+    }
+//    print_hex_ascii_line(ch, len, offset);
     return;
 }
 
@@ -200,7 +213,7 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
     int ip_offset = 0;
 
     //ip的包
-    struct ip* ipptr;
+    ip_header * ipptr;
     struct ip6_hdr* ipv6ptr;
 
     eth_ptr = (ether_header*)packet;
@@ -362,6 +375,8 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
                 }
                 size_t i;
                 print_payload(payload,payload_size);
+//                php_printf("payload:%s\n",(char*)payload);
+                //打印payload,对payload数据进行进一步处理
 
             }
                 break;
@@ -388,6 +403,7 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
 
     zend_hash_str_add(table,_IP_HEADER,strlen(_IP_HEADER),&ip_header_info);
     /*======================================--------------======================================================*/
+    //运行php闭包
     call_user_function_ex(EG(function_table), NULL, &hook,
                           &return_result, 1, args, 0, NULL);
 }
