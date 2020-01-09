@@ -21,6 +21,7 @@
 #define PCAP_CONFIG "config"
 #define PCAP_DEV "dev"
 #define PCAP_MAXPACKET_NUM "max_packet_num"
+#define PCAP_RULE "rule"
 #define PCAP_RECV "onRecv"
 
 typedef struct _user_param{

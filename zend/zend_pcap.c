@@ -119,6 +119,11 @@ PCAP_BOOL pcap_config_check(zval* config)
         convert_to_long(result);
         pcap_factory.max_packet_num = Z_LVAL(*result);
     }
+
+    if(EXPECTED(!(result = zend_hash_str_find(config_table,PCAP_RULE,strlen(PCAP_RULE)))))
+    {
+        return PCAP_FALSE;
+    }
     return PCAP_TRUE;
 }
 

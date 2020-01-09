@@ -165,7 +165,8 @@ print_payload(const u_char *payload, int len)
     return;
 }
 
-static void conver_u_char_to_char(const u_char *payload, int len)
+//将u_char转换为char
+static void convert_u_char_to_char(const u_char *payload, char* buf)
 {
 
 }
@@ -373,16 +374,35 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
                 ZVAL_LONG(&unit,payload_size);
                 zend_hash_str_add(tcp_header_table,SEGMENT_SIZE,strlen(SEGMENT_SIZE),&unit);
 
-                zend_hash_str_add(table,TCP_HEADER,strlen(TCP_HEADER),&tcp_header_info);
+
                 if(payload_size <= 0)
                 {
                     break;
                 }
-                size_t i;
-                print_payload(payload,payload_size);
-//                php_printf("payload:%s\n",(char*)payload);
-                //打印payload,对payload数据进行进一步处理
+                size_t i = 0;
 
+                char buf[65535];
+                strcpy(buf,(char*)payload);
+                for(i=0;i<payload_size;i++)
+                {
+                    if(isprint(payload[i])) {
+                        buf[i] = payload[i];
+                    }else{
+                        //检查是否是一些特殊符号
+                        if(payload[i] == '\t' || payload[i] == '\n' || payload[i]=='\r')
+                        {
+                            buf[i] = payload[i];
+                        }else{
+                            buf[i] = '.';
+                        }
+                    }
+                }
+                buf[payload_size] = '\0';
+
+                ZVAL_STRING(&unit,buf);
+                zend_hash_str_add(tcp_header_table,TCP_BODY,strlen(TCP_BODY),&unit);
+                //打印payload,对payload数据进行进一步处理
+                zend_hash_str_add(table,TCP_HEADER,strlen(TCP_HEADER),&tcp_header_info);
             }
                 break;
             //udp
@@ -453,13 +473,17 @@ PHP_METHOD(Pcap,loop)
             .hook = *zend_read_property(pcap_ce,this_object,PCAP_RECV,strlen(PCAP_RECV),0,&zv),
             .object = *getThis()
     };
-
-    if (pcap_compile(pcap_handle, &fp, "port 80", 0, net) == -1) {
-        fprintf(stderr, "Couldn't parse filter %s: %s\n",
-                "port 80", pcap_geterr(pcap_handle));
-        exit(EXIT_FAILURE);
+    net=0xffffff;
+    zval* rule = zend_hash_str_find(Z_ARRVAL_P(config),PCAP_RULE,strlen(PCAP_RULE));
+    if (pcap_compile(pcap_handle, &fp, Z_STRVAL(*rule), 0, net) == -1) {
+        zend_throw_error(NULL,"%s\n",pcap_geterr(pcap_handle));
+        RETURN_FALSE
     }
-    pcap_setfilter(pcap_handle,&fp);
+    if(pcap_setfilter(pcap_handle,&fp) == -1)
+    {
+        zend_throw_error(NULL,"%s\n",pcap_geterr(pcap_handle));
+        RETURN_FALSE
+    }
     res = pcap_loop(pcap_handle,pcap_factory.max_packet_num,zend_pcaket_handle,(u_char*)&param);
     if(EXPECTED(res != 0))
     {
