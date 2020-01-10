@@ -7,7 +7,6 @@
 #include <linux/if_ether.h>
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
-#include <netinet/tcp.h>
 
 
 #define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"

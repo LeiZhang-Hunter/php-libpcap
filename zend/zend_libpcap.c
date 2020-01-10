@@ -318,6 +318,10 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
         ZVAL_STRING(&unit,ipv4_str);
         zend_hash_str_add(ip_header_table,IP_DST,strlen(IP_DST),&unit);
 
+        int ip_len = sizeof(ip_header);
+
+        int ip_packet_len = ipptr->ip_len-ip_len;
+
         switch (ipptr->ip_p)
         {
             //ip
@@ -327,14 +331,25 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
                 HashTable* tcp_header_table = Z_ARRVAL_P(&tcp_header_info);
 
                 //端口往来
-                tcp_header* _tcphdr = (tcp_header*)(packet+ETHER_HEADER_LEN+ sizeof(ip_header));
+                tcp_header* _tcphdr = (tcp_header*)(packet+ETHER_HEADER_LEN+ ip_len);
+
+                //数据偏移
+                size_t tcp_header_len = TH_OFF(_tcphdr)<<2;
+                php_printf("%ld\n",tcp_header_len);
+                php_printf("size:%ld\n",sizeof(tcp_header));
+
+                if(ip_packet_len < tcp_header_len)
+                {
+                    return;
+                }
+
 
                 //主机端口,目的地的
-                ZVAL_LONG(&unit,ntohs(_tcphdr->dest));
+                ZVAL_LONG(&unit,ntohs(_tcphdr->th_sport));
                 zend_hash_str_add(tcp_header_table,_TCP_SPORT,strlen(_TCP_SPORT),&unit);
 
                 //主机端口来源地的
-                ZVAL_LONG(&unit,ntohs(_tcphdr->source));
+                ZVAL_LONG(&unit,ntohs(_tcphdr->th_dport));
                 zend_hash_str_add(tcp_header_table,_TCP_DPORT,strlen(_TCP_DPORT),&unit);
 
                 /*--------------------------------------*/
@@ -347,30 +362,30 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
                 //              options                 |
                 //---------------------------------------
                 //序列码
-                ZVAL_LONG(&unit,ntohl(_tcphdr->seq));
+                ZVAL_LONG(&unit,ntohl(_tcphdr->th_seq));
                 zend_hash_str_add(tcp_header_table,_TCP_TH_SEQ,strlen(_TCP_TH_SEQ),&unit);
 
                 //确认码
-                ZVAL_LONG(&unit,ntohs(_tcphdr->ack));
+                ZVAL_LONG(&unit,ntohs(_tcphdr->th_ack));
                 zend_hash_str_add(tcp_header_table,_TCP_TH_ACK,strlen(_TCP_TH_ACK),&unit);
 
                 //窗口
-                ZVAL_LONG(&unit,ntohs(_tcphdr->window));
+                ZVAL_LONG(&unit,ntohs(_tcphdr->th_win));
                 zend_hash_str_add(tcp_header_table,_TCP_WINDOW,strlen(_TCP_WINDOW),&unit);
 
                 //检测
-                ZVAL_LONG(&unit,ntohs(_tcphdr->check));
+                ZVAL_LONG(&unit,ntohs(_tcphdr->th_sum));
                 zend_hash_str_add(tcp_header_table,_TCP_CHECK,strlen(_TCP_CHECK),&unit);
 
                 //urg_ptr
-                ZVAL_LONG(&unit,ntohs(_tcphdr->urg_ptr));
+                ZVAL_LONG(&unit,ntohs(_tcphdr->th_urp));
                 zend_hash_str_add(tcp_header_table,_TCP_URG_PTR,strlen(_TCP_URG_PTR),&unit);
 
                 //计算出tcp长度
-                int tcp_len = sizeof(ip_header);
+                int tcp_len = sizeof(tcp_header);
 
-                const u_char *payload = (packet+ETHER_HEADER_LEN+sizeof(ip_header)+sizeof(tcp_header));
-                size_t payload_size = ntohs(ipptr->ip_len)-(sizeof(ip_header)+tcp_len);
+                const u_char *payload = (packet+ETHER_HEADER_LEN+ip_len+tcp_header_len);
+                size_t payload_size = ntohs(ipptr->ip_len)-(ip_len+tcp_header_len);
                 ZVAL_LONG(&unit,payload_size);
                 zend_hash_str_add(tcp_header_table,SEGMENT_SIZE,strlen(SEGMENT_SIZE),&unit);
 

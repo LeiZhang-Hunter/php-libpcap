@@ -4,7 +4,7 @@ $list = $pcap->findAllDevs();
 $pcap->setConfig([
     "dev"=>"eno1",
     "rule"=>"port 80",
-    "max_packet_num"=>5000
+    "max_packet_num"=>100
 ]);
 $pcap->onReceive(function($data) use($pcap){
 	var_dump($data);
