@@ -259,7 +259,7 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
                 ZVAL_LONG(&unit,ntohs(_tcphdr->th_win));
                 zend_hash_str_add(tcp_header_table,_TCP_WINDOW,strlen(_TCP_WINDOW),&unit);
 
-                //检测
+                //校验码
                 ZVAL_LONG(&unit,ntohs(_tcphdr->th_sum));
                 zend_hash_str_add(tcp_header_table,_TCP_CHECK,strlen(_TCP_CHECK),&unit);
 
@@ -282,25 +282,10 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
                 }
                 size_t i = 0;
 
-                char buf[65535];
-                strcpy(buf,(char*)payload);
-                for(i=0;i<payload_size;i++)
-                {
-                    if(isprint(payload[i])) {
-                        buf[i] = payload[i];
-                    }else{
-                        //检查是否是一些特殊符号
-                        if(payload[i] == '\t' || payload[i] == '\n' || payload[i]=='\r')
-                        {
-                            buf[i] = payload[i];
-                        }else{
-                            buf[i] = '.';
-                        }
-                    }
-                }
-                buf[payload_size] = '\0';
+                zval hash_data;
+                array_init(&hash_data);
+                _execute_http_compile(payload,&hash_data);
 
-                ZVAL_STRING(&unit,buf);
                 zend_hash_str_add(tcp_header_table,TCP_BODY,strlen(TCP_BODY),&unit);
                 //打印payload,对payload数据进行进一步处理
                 zend_hash_str_add(table,TCP_HEADER,strlen(TCP_HEADER),&tcp_header_info);

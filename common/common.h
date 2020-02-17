@@ -7,7 +7,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <pcap/pcap.h>
-
+#include <zlib.h>
 
 #include "php.h"
 #include "pcap_lib.h"
@@ -16,6 +16,7 @@
 #include "ether.h"
 #include "ip_struct.h"
 #include "tcp_struct.h"
+#include "http_parse.h"
 
 #define ERROR_BUF "error"
 #define PCAP_CONFIG "config"

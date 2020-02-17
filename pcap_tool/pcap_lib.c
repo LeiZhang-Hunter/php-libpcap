@@ -1,7 +1,6 @@
 //
 // Created by zhanglei on 2020/1/2.
 //
-#include <pthread.h>
 #include "common.h"
 extern pcap_module pcap_factory;
 
