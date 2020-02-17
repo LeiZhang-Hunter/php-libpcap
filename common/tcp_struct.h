@@ -35,5 +35,4 @@ struct tcphdr {
     uint16_t th_urp;         /* urgent pointer */
 };
 
-#define TH_OFF(th)  (((th)->th_offx2 & 0xf0) >> 4)
 #endif //LIBPCAP_TCP_STRUCT_H

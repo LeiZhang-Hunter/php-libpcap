@@ -18,5 +18,6 @@
 # define IP_DST "ip_dst"
 # define _IP_HEADER "ip_header"
 # define SEGMENT_SIZE "segment_size"
+#define IP_HL(ip)   ((ip)->ip_hl & 0x0f)
 
 #endif //LIBPCAP_IP_STRUCT_H
