@@ -85,5 +85,6 @@ if test "$PHP_LIBPCAP" != "no"; then
   PHP_NEW_EXTENSION(libpcap, libpcap.c \
   zend/zend_libpcap.c \
   zend/zend_pcap.c \
-  pcap_tool/pcap_lib.c, $ext_shared)
+  pcap_tool/pcap_lib.c \
+  pcap_tool/http_parse.c, $ext_shared)
 fi

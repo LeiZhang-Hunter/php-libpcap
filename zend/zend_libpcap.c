@@ -278,15 +278,19 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
 
                 if(payload_size <= 0)
                 {
-                    break;
+                    return;
                 }
                 size_t i = 0;
 
                 zval hash_data;
                 array_init(&hash_data);
-                _execute_http_compile(payload,&hash_data);
+                PCAP_BOOL ret = _execute_http_compile(payload,payload_size,&hash_data);
+                if(ret == PCAP_FALSE)
+                {
+                    return;
+                }
 
-                zend_hash_str_add(tcp_header_table,TCP_BODY,strlen(TCP_BODY),&unit);
+                zend_hash_str_add(tcp_header_table,TCP_BODY,strlen(TCP_BODY),&hash_data);
                 //打印payload,对payload数据进行进一步处理
                 zend_hash_str_add(table,TCP_HEADER,strlen(TCP_HEADER),&tcp_header_info);
             }
@@ -305,9 +309,6 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
     }else if(ether_type == ETH_P_IPV6)
     {
         return;
-        ipv6ptr = (struct ip6_hdr*) (packet+ip_offset);
-        ZVAL_STRING(&unit,"ipv6");
-        zend_hash_str_add(table,MAC_TYPE,strlen(MAC_TYPE),&unit);
     }else{
         return;
     }

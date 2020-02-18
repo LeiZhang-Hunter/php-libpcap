@@ -7,7 +7,7 @@ $pcap->setConfig([
     "max_packet_num"=>100
 ]);
 $pcap->onReceive(function($data) use($pcap){
-	var_dump($data);
+		var_dump($data["tcp_header"]);
 });
 $r = $pcap->loop();
 var_dump($r);
