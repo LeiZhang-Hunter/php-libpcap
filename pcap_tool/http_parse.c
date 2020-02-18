@@ -20,23 +20,19 @@ PCAP_BOOL _execute_http_compile(u_char* context,size_t context_size,zval* zval_c
         return PCAP_FALSE;
     }
 
-    uint8_t http_protocol_type;
     zval unit;
     HashTable* http_table = Z_ARRVAL_P(zval_container);
 
     if(!memcmp(http_header_context,"GET ",4))
     {
-        http_protocol_type = HTTP_GET_CODE;
         ZVAL_STRING(&unit,HTTP_REQUEST);
         zend_hash_str_add(http_table,HTTP_TYPE,strlen(HTTP_TYPE),&unit);
     }else if(!memcmp(http_header_context,"POST ",5))
     {
-        http_protocol_type = HTTP_POST_CODE;
         ZVAL_STRING(&unit,HTTP_REQUEST_POST);
         zend_hash_str_add(http_table,HTTP_TYPE,strlen(HTTP_TYPE),&unit);
     }else if(!memcmp(http_header_context,"HTTP",4))
     {
-        http_protocol_type = HTTP_RESPONSE_CODE;
         ZVAL_STRING(&unit,HTTP_RESPONSE);
         zend_hash_str_add(http_table,HTTP_TYPE,strlen(HTTP_TYPE),&unit);
     }else{
