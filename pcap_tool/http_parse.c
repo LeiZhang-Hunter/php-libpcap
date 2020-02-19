@@ -221,6 +221,7 @@ PCAP_BOOL _execute_http_compile(u_char* context,size_t context_size,zval* zval_c
                     continue;
                 }
                 http_body = context+i;
+                body_size = context_size-i;
                 char buf[BUFSIZ];
                 gzip_decompress(buf,(void *)http_body,body_size);
                 break;

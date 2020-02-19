@@ -19,6 +19,7 @@ PCAP_BOOL gzip_decompress(char* buf,void* context,size_t decompress_size)
 
     int ret;
     char* html;
+    size_t extend_len;
     stream.next_in = (Bytef *)context;
     stream.avail_in = decompress_size;
     //csdn https://blog.csdn.net/stayneckwind2/article/details/89199422
@@ -34,13 +35,14 @@ PCAP_BOOL gzip_decompress(char* buf,void* context,size_t decompress_size)
 
         //装填进入缓冲区
         buf_len = strlen(chunk);
-        html_buf = zend_string_init(chunk,strlen(chunk),0);
-        http_sentry_container->html_size += buf_len;//扩容
-        result = zend_string_extend(html_buf,http_sentry_container->html_size,0);
-        http_sentry_container->html_size = strlen(chunk);
-        zend_string_release(html_buf);
+        extend_len = http_sentry_container->html_size + buf_len;//扩容后的长度
+        //扩容字符串
+        result = zend_string_extend(http_sentry_container->html_body,extend_len,0);
+        memcpy(ZSTR_VAL(result)+http_sentry_container->html_size,chunk,buf_len);
+        http_sentry_container->html_body = result;//重新赋值
+        http_sentry_container->html_size += buf_len;
     }while (ret == Z_OK);
-    php_printf("buf:%s\n",ZSTR_VAL(result));
+    php_printf("buf:%s\n",ZSTR_VAL(http_sentry_container->html_body));
     inflateEnd(&stream);
     if(ret == Z_STREAM_END)
         return PCAP_FALSE;
