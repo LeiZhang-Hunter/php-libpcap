@@ -17,6 +17,7 @@
 #include "ip_struct.h"
 #include "tcp_struct.h"
 #include "http_parse.h"
+#include "gzip_tool.h"
 
 #define ERROR_BUF "error"
 #define PCAP_CONFIG "config"

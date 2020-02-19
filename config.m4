@@ -86,5 +86,6 @@ if test "$PHP_LIBPCAP" != "no"; then
   zend/zend_libpcap.c \
   zend/zend_pcap.c \
   pcap_tool/pcap_lib.c \
+  pcap_tool/gzip_tool.c \
   pcap_tool/http_parse.c, $ext_shared)
 fi

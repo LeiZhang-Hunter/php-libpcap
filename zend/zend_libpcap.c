@@ -4,42 +4,55 @@
 
 #include "common.h"
 extern pcap_module pcap_factory;
-zend_class_entry* pcap_ce;
+zend_class_entry* http_sentry_ce;
 zval* this_object;
 const zend_function_entry pcap_function_list[] = {
-        PHP_ME(Pcap, __construct, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-        PHP_ME(Pcap, findAllDevs, NULL, ZEND_ACC_PUBLIC)
-        PHP_ME(Pcap, setConfig, pcap_config, ZEND_ACC_PUBLIC)
-        PHP_ME(Pcap, onReceive, pcap_recv_hook, ZEND_ACC_PUBLIC)
-        PHP_ME(Pcap, loop, NULL, ZEND_ACC_PUBLIC)
+        PHP_ME(HttpSentry, __construct, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+        PHP_ME(HttpSentry, findAllDevs, NULL, ZEND_ACC_PUBLIC)
+        PHP_ME(HttpSentry, setConfig, pcap_config, ZEND_ACC_PUBLIC)
+        PHP_ME(HttpSentry, onReceive, pcap_recv_hook, ZEND_ACC_PUBLIC)
+        PHP_ME(HttpSentry, monitor, NULL, ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 
 static void setErrBuf(zval* object)
 {
-    zend_update_property_string(pcap_ce,object,ERROR_BUF,sizeof(ERROR_BUF),pcap_factory.err_buf);
+    zend_update_property_string(http_sentry_ce,object,ERROR_BUF,sizeof(ERROR_BUF),pcap_factory.err_buf);
 }
 
 //构造函数
-PHP_METHOD(Pcap,__construct)
+PHP_METHOD(HttpSentry,__construct)
 {
-    this_object = getThis();
+    if(!http_sentry_container)
+    {
+        init_http_sentry_container();
+        this_object = getThis();
+    }else{
+        if(http_sentry_container->run_state == HTTP_SENTRY_START)
+        {
+            zend_throw_error(NULL,"%s\n","httpSentry has been initialized");
+        }else{
+            this_object = getThis();
+        }
+    }
 }
 
 //设置配置文件
-PHP_METHOD(Pcap,setConfig)
+PHP_METHOD(HttpSentry,setConfig)
 {
+    check_http_sentry_container();
     zval *config = NULL;//this opetion begin single model
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_ARRAY(config)
     ZEND_PARSE_PARAMETERS_END();
-    zend_update_property(pcap_ce,getThis(),PCAP_CONFIG,strlen(PCAP_CONFIG),config);
+    zend_update_property(http_sentry_ce,getThis(),PCAP_CONFIG,strlen(PCAP_CONFIG),config);
 }
 
 //当收到数据的时候进行触发
-PHP_METHOD(Pcap,onReceive)
+PHP_METHOD(HttpSentry,onReceive)
 {
     zval *hook;
+    check_http_sentry_container();
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_ZVAL(hook)
     ZEND_PARSE_PARAMETERS_END();
@@ -47,16 +60,10 @@ PHP_METHOD(Pcap,onReceive)
     //如果说是回调函数才会加载到配置当中，不是的话抛出error
     if(EXPECTED(zend_is_callable(hook,0,NULL)))
     {
-        zend_update_property(pcap_ce,getThis(),PCAP_RECV,strlen(PCAP_RECV),hook);
+        zend_update_property(http_sentry_ce,getThis(),PCAP_RECV,strlen(PCAP_RECV),hook);
     }else{
         zend_throw_error(NULL,"%s\n","Pcap->onReceive must be callable");
     }
-}
-
-//将u_char转换为char
-static void convert_u_char_to_char(const u_char *payload, char* buf)
-{
-
 }
 
 //循环处理函数
@@ -321,7 +328,7 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
 }
 
 //执行捕捉循环
-PHP_METHOD(Pcap,loop)
+PHP_METHOD(HttpSentry,monitor)
 {
     zval* config;
 
@@ -329,7 +336,9 @@ PHP_METHOD(Pcap,loop)
 
     PCAP_BOOL res;
 
-    config = zend_read_property(pcap_ce,getThis(),PCAP_CONFIG,strlen(PCAP_CONFIG),0,&zv);
+    check_http_sentry_container();
+
+    config = zend_read_property(http_sentry_ce,getThis(),PCAP_CONFIG,strlen(PCAP_CONFIG),0,&zv);
 
     pcap_t* pcap_handle;
 
@@ -357,7 +366,7 @@ PHP_METHOD(Pcap,loop)
     }
     bpf_u_int32 net;
     user_param param = {
-            .hook = *zend_read_property(pcap_ce,this_object,PCAP_RECV,strlen(PCAP_RECV),0,&zv),
+            .hook = *zend_read_property(http_sentry_ce,this_object,PCAP_RECV,strlen(PCAP_RECV),0,&zv),
             .object = *getThis()
     };
     net=0xffffff;
@@ -380,14 +389,16 @@ PHP_METHOD(Pcap,loop)
 }
 
 //停止循环
-PHP_METHOD(Pcap,stop)
+PHP_METHOD(HttpSentry,stop)
 {
 }
 
 //发现所有设备
-PHP_METHOD(Pcap,findAllDevs)
+PHP_METHOD(HttpSentry,findAllDevs)
 {
     PCAP_BOOL res;
+
+    check_http_sentry_container();
 
     pcap_if_t* all_devs_handle = pcap_factory.find_all_devs();
     if(EXPECTED(all_devs_handle))
@@ -415,10 +426,10 @@ void class_Pcap_load()
    zend_class_entry entry;
 
    //初始化
-    INIT_CLASS_ENTRY(entry,"Pcap",pcap_function_list);
+    INIT_CLASS_ENTRY(entry,"HttpSentry",pcap_function_list);
     //注册类
-    pcap_ce = zend_register_internal_class(&entry);
-    zend_declare_property_null(pcap_ce,ERROR_BUF,strlen(ERROR_BUF),ZEND_ACC_PRIVATE);//错误信息
-    zend_declare_property_null(pcap_ce,PCAP_CONFIG,strlen(PCAP_CONFIG),ZEND_ACC_PUBLIC);//配置
-    zend_declare_property_null(pcap_ce,PCAP_DEV,strlen(PCAP_DEV),ZEND_ACC_PUBLIC);//配置
+    http_sentry_ce = zend_register_internal_class(&entry);
+    zend_declare_property_null(http_sentry_ce,ERROR_BUF,strlen(ERROR_BUF),ZEND_ACC_PRIVATE);//错误信息
+    zend_declare_property_null(http_sentry_ce,PCAP_CONFIG,strlen(PCAP_CONFIG),ZEND_ACC_PUBLIC);//配置
+    zend_declare_property_null(http_sentry_ce,PCAP_DEV,strlen(PCAP_DEV),ZEND_ACC_PUBLIC);//配置
 }

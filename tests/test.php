@@ -1,5 +1,5 @@
 <?php
-$pcap = new Pcap();
+$pcap = new HttpSentry();
 $list = $pcap->findAllDevs();
 $pcap->setConfig([
     "dev"=>"eno1",
@@ -7,7 +7,6 @@ $pcap->setConfig([
     "max_packet_num"=>100
 ]);
 $pcap->onReceive(function($data) use($pcap){
-		var_dump($data["tcp_header"]);
 });
-$r = $pcap->loop();
+$r = $pcap->monitor();
 var_dump($r);

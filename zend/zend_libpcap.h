@@ -15,15 +15,15 @@ ZEND_BEGIN_ARG_INFO_EX(pcap_recv_hook, 0, 0, 1)
                 ZEND_ARG_INFO(0, pcap_recv_hook)
 ZEND_END_ARG_INFO()
 
-PHP_METHOD(Pcap,__construct);
+PHP_METHOD(HttpSentry,__construct);
 //设置配置文件
-PHP_METHOD(Pcap,setConfig);
+PHP_METHOD(HttpSentry,setConfig);
 //当收到数据的时候触发
-PHP_METHOD(Pcap,onReceive);
+PHP_METHOD(HttpSentry,onReceive);
 //开启循环
-PHP_METHOD(Pcap,loop);
+PHP_METHOD(HttpSentry,monitor);
 //发现所有设备
-PHP_METHOD(Pcap,findAllDevs);
+PHP_METHOD(HttpSentry,findAllDevs);
 
 void class_Pcap_load();
 #endif //LIBPCAP_ZEND_LIBPCAP_H
