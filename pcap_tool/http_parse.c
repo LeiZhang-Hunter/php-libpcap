@@ -147,6 +147,9 @@ PCAP_BOOL _execute_http_compile(u_char* context,size_t context_size,zval* zval_c
                             if(new_address)
                             {
                                 memcpy(ZSTR_VAL(new_address)+html_body_len,context,context_size);
+                                ZVAL_STR(&unit,new_address);
+                                php_printf("%s\n",ZSTR_VAL(new_address));
+                                zend_hash_str_update(Z_ARRVAL_P(this_http_table),HTTP_BODY,strlen(HTTP_BODY),&unit);
                             }
                         }
                     }
