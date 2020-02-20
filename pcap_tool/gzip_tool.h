@@ -7,4 +7,4 @@
 
 #endif //LIBPCAP_GZIP_TOOL_H
 
-PCAP_BOOL gzip_decompress(char* buf,void* context,size_t decompress_size);
+PCAP_BOOL gzip_decompress(void* context,size_t decompress_size);

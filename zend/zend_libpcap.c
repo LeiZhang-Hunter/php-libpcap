@@ -127,6 +127,8 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
     //ip头信息
     array_init(&ip_header_info);
 
+    array_init(&tcp_header_info);
+
     table = Z_ARRVAL_P(&args[0]);
 
     /*=====================================以太网头部的添加=================================================*/
@@ -208,9 +210,12 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
         //ip地址往来
         ZVAL_STRING(&unit,ipv4_str);
         inet_ntop(AF_INET,&ipptr->ip_src,ipv4_str,sizeof(ipv4_str));
+        http_sentry_container->source_ip = zend_string_init(ipv4_str,strlen(ipv4_str),0);
         zend_hash_str_add(ip_header_table,IP_SRC,strlen(IP_SRC),&unit);
+
         inet_ntop(AF_INET,&ipptr->ip_dst,ipv4_str,sizeof(ipv4_str));
         ZVAL_STRING(&unit,ipv4_str);
+        http_sentry_container->dest_ip = zend_string_init(ipv4_str,strlen(ipv4_str),0);
         zend_hash_str_add(ip_header_table,IP_DST,strlen(IP_DST),&unit);
 
         int ip_len = sizeof(ip_header);
@@ -222,8 +227,7 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
             //ip
             case IPPROTO_TCP: {
                 //记录tcp信息加入到zval变量容器
-                array_init(&tcp_header_info);
-                HashTable* tcp_header_table = Z_ARRVAL_P(&tcp_header_info);
+                http_sentry_container->auto_join_http_table();//自动进入
 
                 //端口往来
                 tcp_header* _tcphdr = (tcp_header*)(packet+ETHER_HEADER_LEN+ ip_len);
@@ -236,14 +240,21 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
                     return;
                 }
 
-
+                http_sentry_container->source_port = ntohs(_tcphdr->th_sport);
                 //主机端口,目的地的
-                ZVAL_LONG(&unit,ntohs(_tcphdr->th_sport));
-                zend_hash_str_add(tcp_header_table,_TCP_SPORT,strlen(_TCP_SPORT),&unit);
+                ZVAL_LONG(&unit,http_sentry_container->source_port);
+
 
                 //主机端口来源地的
-                ZVAL_LONG(&unit,ntohs(_tcphdr->th_dport));
+                http_sentry_container->dest_port = ntohs(_tcphdr->th_dport);
+                ZVAL_LONG(&unit,http_sentry_container->dest_port);
+
+
+                HashTable* tcp_header_table = Z_ARRVAL_P(&tcp_header_info);
+                zend_hash_str_add(tcp_header_table,_TCP_SPORT,strlen(_TCP_SPORT),&unit);
                 zend_hash_str_add(tcp_header_table,_TCP_DPORT,strlen(_TCP_DPORT),&unit);
+
+                //将块信息记录进http 容器
 
                 /*--------------------------------------*/
                 //         source     |      dest       |
@@ -274,9 +285,6 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
                 ZVAL_LONG(&unit,ntohs(_tcphdr->th_urp));
                 zend_hash_str_add(tcp_header_table,_TCP_URG_PTR,strlen(_TCP_URG_PTR),&unit);
 
-                //计算出tcp长度
-                int tcp_len = sizeof(tcp_header);
-
                 const u_char *payload = (packet+ETHER_HEADER_LEN+ip_len+tcp_header_len);
                 size_t payload_size = ntohs(ipptr->ip_len)-(ip_len+tcp_header_len);
                 ZVAL_LONG(&unit,payload_size);
@@ -287,7 +295,6 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
                 {
                     return;
                 }
-                size_t i = 0;
 
                 zval hash_data;
                 array_init(&hash_data);
@@ -299,7 +306,17 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
 
                 zend_hash_str_add(tcp_header_table,TCP_BODY,strlen(TCP_BODY),&hash_data);
                 //打印payload,对payload数据进行进一步处理
-                zend_hash_str_add(table,TCP_HEADER,strlen(TCP_HEADER),&tcp_header_info);
+//                zend_hash_str_add(table,TCP_HEADER,strlen(TCP_HEADER),tcp_header_info);
+
+                /*======================================--------------======================================================*/
+                //运行php闭包
+                zval copy_data;
+                ZVAL_COPY(&copy_data,http_sentry_container->get_auto_http_table());
+                args[0] = copy_data;
+                if(!http_sentry_container->wait_return) {
+                    call_user_function_ex(EG(function_table), NULL, &hook,
+                                          &return_result, 1, args, 0, NULL);
+                }
             }
                 break;
             //udp
@@ -320,11 +337,7 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
         return;
     }
 
-    zend_hash_str_add(table,_IP_HEADER,strlen(_IP_HEADER),&ip_header_info);
-    /*======================================--------------======================================================*/
-    //运行php闭包
-    call_user_function_ex(EG(function_table), NULL, &hook,
-                          &return_result, 1, args, 0, NULL);
+
 }
 
 //执行捕捉循环
