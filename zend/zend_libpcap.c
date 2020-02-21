@@ -72,8 +72,7 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
     //以太网类型
     int ether_type;
 
-    //以太网头
-    ether_header* eth_ptr;
+
 
     //来源mac地址
     char source_mac[MAX_LENGTH_OF_LONG];
@@ -117,7 +116,7 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
     ip_header * ipptr;
     struct ip6_hdr* ipv6ptr;
 
-    eth_ptr = (ether_header*)packet;
+
     //初始化一个数组
     array_init(&args[0]);
 
@@ -133,14 +132,10 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
 
     /*=====================================以太网头部的添加=================================================*/
     HashTable* ether_header_table = Z_ARRVAL_P(&eth_header_info);
-    //格式化mac地址
-    php_sprintf(source_mac,MAC_FMT,eth_ptr->h_source[0],eth_ptr->h_source[1],eth_ptr->h_source[2],
-            eth_ptr->h_source[3],eth_ptr->h_source[4],eth_ptr->h_source[5]);
+
     ZVAL_STRING(&unit,source_mac);
     zend_hash_str_add(ether_header_table,MAC_SOURCE,strlen(MAC_SOURCE),&unit);
-    //格式化mac
-    php_sprintf(dest_mac,MAC_FMT,eth_ptr->h_dest[0],eth_ptr->h_dest[1],eth_ptr->h_dest[2],
-                eth_ptr->h_dest[3],eth_ptr->h_dest[4],eth_ptr->h_dest[5]);
+
     ZVAL_STRING(&unit,dest_mac);
     zend_hash_str_add(ether_header_table,MAC_DEST,strlen(MAC_DEST),&unit);
 

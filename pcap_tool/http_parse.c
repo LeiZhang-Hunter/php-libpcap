@@ -20,6 +20,7 @@ PCAP_BOOL init_http_sentry_container()
     http_sentry_container->auto_get_chunk = _auto_get_chunk;
     http_sentry_container->auto_get_gzip = _auto_get_gzip;
     http_sentry_container->get_auto_http_table = _get_auto_http_table;
+    http_sentry_container->auto_leave_http_table = _auto_leave_http_table;
     http_sentry_container->execute_http_compile = _execute_http_compile;
     http_sentry_container->html_size = 0;
     http_sentry_container->html_body = zend_string_init("",strlen(""),0);//初始化html
@@ -83,6 +84,7 @@ PCAP_BOOL _execute_http_compile(u_char* context,size_t context_size,zval* zval_c
     char buf[BUFSIZ];
     zend_string* zend_html_body;
     zval *this_http_table;
+    zval *this_http_table_body_buffer;
     //由于http前半段的packet不可能出现\0所以可以直接转化为字符串
     char* http_header_context = (char*)context;
 
@@ -123,6 +125,11 @@ PCAP_BOOL _execute_http_compile(u_char* context,size_t context_size,zval* zval_c
         {
             ZVAL_LONG(&unit,1);
             zend_hash_str_add(http_table,"is_chunk",strlen("is_chunk"),&unit);
+
+            if(context[0] == '0')
+            {
+                return PCAP_TRUE;
+            }
             //如果说是开启了chunk
             if(http_sentry_container->auto_get_gzip())
             {
@@ -132,34 +139,30 @@ PCAP_BOOL _execute_http_compile(u_char* context,size_t context_size,zval* zval_c
                 this_http_table = http_sentry_container->get_auto_http_table();
                 if(this_http_table)
                 {
-                    this_http_table = zend_hash_str_find(Z_ARRVAL_P(this_http_table),HTTP_BODY,strlen(HTTP_BODY));
-                    if(this_http_table)
+                    this_http_table_body_buffer = zend_hash_str_find(Z_ARRVAL_P(this_http_table),HTTP_BODY,strlen(HTTP_BODY));
+                    if(this_http_table_body_buffer)
                     {
                         //获取其中的zend_string
-                        if(Z_TYPE(*this_http_table) == IS_STRING)
+                        if(Z_TYPE(*this_http_table_body_buffer) == IS_STRING)
                         {
 
-                            zend_html_body = Z_STR(*this_http_table);
+                            zend_html_body = Z_STR(*this_http_table_body_buffer);
                             size_t html_body_len = ZSTR_LEN(zend_html_body);
-                            size_t extend_len = html_body_len+context_size;
+                            size_t extend_len = html_body_len+context_size+1;
                             //扩容
                             zend_string* new_address = zend_string_extend(zend_html_body,extend_len,0);
                             if(new_address)
                             {
                                 memcpy(ZSTR_VAL(new_address)+html_body_len,context,context_size);
                                 ZVAL_STR(&unit,new_address);
-                                php_printf("%s\n",ZSTR_VAL(new_address));
                                 zend_hash_str_update(Z_ARRVAL_P(this_http_table),HTTP_BODY,strlen(HTTP_BODY),&unit);
                             }
                         }
                     }
                 }
-
-                if(context[context_size] == '0')
-                {
-                    http_sentry_container->wait_return = 0;
-                }
             }
+
+
         }else{
             //不知道什么数据用tcpdump的格式去打印出来他并且加入到buffer里吧
             for(num=0;num<context_size;num++)
@@ -350,6 +353,7 @@ PCAP_BOOL _execute_http_compile(u_char* context,size_t context_size,zval* zval_c
                 break;
             }
 
+            //只有chunk会走到这一块逻辑
             case CHUNK_BODY_BEGIN:{
                 //从这里开始是块的body了
                 if(http_sentry_container->auto_get_gzip())
@@ -565,5 +569,17 @@ zval* _get_auto_http_table()
 //自动离开，并且进行内存回收
 PCAP_BOOL _auto_leave_http_table()
 {
+    if(!http_sentry_container->hash_key)
+    {
+        http_sentry_container->auto_join_http_table();//自动加入
+    }
 
+    HashTable* table = Z_ARRVAL_P(http_sentry_container->http_array_table);
+    if(!(zend_hash_str_find(table,ZSTR_VAL(http_sentry_container->hash_key),ZSTR_LEN(
+            http_sentry_container->hash_key))))
+    {
+        return PCAP_FALSE;
+    }
+    zend_hash_del(table,http_sentry_container->hash_key);
+    return PCAP_TRUE;
 }

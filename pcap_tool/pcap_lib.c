@@ -44,3 +44,8 @@ static void zend_pcaket_handle(u_char *param, const struct pcap_pkthdr *header,c
     eth_ptr = (struct ether*)pcaket;
     unsigned char *payload;
 }
+
+PCAP_BOOL _packet_ether()
+{
+
+}

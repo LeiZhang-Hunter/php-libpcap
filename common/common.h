@@ -18,7 +18,7 @@
 #include "tcp_struct.h"
 #include "http_parse.h"
 #include "gzip_tool.h"
-
+#include "ether_packet.h"
 #define ERROR_BUF "error"
 #define PCAP_CONFIG "config"
 #define PCAP_DEV "dev"

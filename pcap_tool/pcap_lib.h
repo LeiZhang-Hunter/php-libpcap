@@ -6,6 +6,8 @@
 #define LIBPCAP_PCAP_LIB_H
 
 
+#include "ether_packet.h"
+
 #define PCAP_BOOL int
 #define PCAP_FALSE -1
 #define PCAP_TRUE 0
@@ -20,6 +22,7 @@ typedef struct _pcap_module{
     int max_packet_num;
     zend_string* dev_name;
     pcap_if_t* (*find_all_devs)();
+    ether_packet* eth_packet;
     void (*packer_handle)(u_char *param, const struct pcap_pkthdr *header,const u_char *data);
     PCAP_BOOL (*free_all_devs)(pcap_if_t* alldevs);
     PCAP_BOOL (*loop)(void* pcaket_handle);
@@ -40,6 +43,8 @@ PCAP_BOOL pcap_lib_init();
 pcap_if_t* pcap_find_all_devs();
 
 PCAP_BOOL pcap_free_all_devs(pcap_if_t*);
+
+PCAP_BOOL _packet_ether();
 
 PCAP_BOOL loop(void* pcaket_handle);
 

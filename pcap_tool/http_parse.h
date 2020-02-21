@@ -67,6 +67,7 @@ typedef struct _http_sentry{
     PCAP_BOOL (*auto_set_chunk)(uint8_t chunk_flag);//进入http table
     PCAP_BOOL (*auto_set_gzip)(uint8_t gzip_flag);//进入http table
     PCAP_BOOL (*auto_join_http_table)();//进入http table
+    PCAP_BOOL (*auto_leave_http_table)();//进入http table
     PCAP_BOOL (*start)();
     PCAP_BOOL (*stop)();
     PCAP_BOOL (*destroy)();
@@ -109,6 +110,8 @@ PCAP_BOOL http_sentry_stop();
 PCAP_BOOL http_sentry_destroy(http_sentry* container);
 
 PCAP_BOOL _execute_http_compile(u_char* context,size_t context_size,zval* zval_container);
+
+PCAP_BOOL _auto_leave_http_table();
 
 int _auto_get_chunk();
 
