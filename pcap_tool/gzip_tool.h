@@ -4,7 +4,6 @@
 
 #ifndef LIBPCAP_GZIP_TOOL_H
 #define LIBPCAP_GZIP_TOOL_H
-
+PCAP_BOOL gzip_decompress(void* context,size_t decompress_size);
 #endif //LIBPCAP_GZIP_TOOL_H
 
-PCAP_BOOL gzip_decompress(void* context,size_t decompress_size);

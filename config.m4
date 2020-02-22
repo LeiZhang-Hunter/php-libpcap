@@ -84,8 +84,11 @@ if test "$PHP_LIBPCAP" != "no"; then
   PHP_SUBST(LIBPCAP_SHARED_LIBADD)
   PHP_NEW_EXTENSION(libpcap, libpcap.c \
   zend/zend_libpcap.c \
-  zend/zend_pcap.c \
   pcap_tool/pcap_lib.c \
   pcap_tool/gzip_tool.c \
+  pcap_tool/node_sentry.c \
+  pcap_tool/ether_packet.c \
+  pcap_tool/ip_packet.c \
+  pcap_tool/tcp_packet.c \
   pcap_tool/http_parse.c, $ext_shared)
 fi

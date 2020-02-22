@@ -56,15 +56,14 @@ PHP_RINIT_FUNCTION(libpcap)
 	return SUCCESS;
 }
 
+
+
+
 //扩展模块初始化的函数
 PHP_MINIT_FUNCTION(libpcap)
 {
     //装载我的类
-    CLASS_LOAD(Pcap);
-    //初始化进入
-    pcap_lib_init();
-    //初始化zend和pcap的树
-    init_factory();
+	CLASS_LOAD(Pcap);
 }
 
 /* }}} */

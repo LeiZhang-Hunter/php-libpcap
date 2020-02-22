@@ -25,6 +25,7 @@ PHP_METHOD(HttpSentry,monitor);
 //发现所有设备
 PHP_METHOD(HttpSentry,findAllDevs);
 
+PHP_METHOD(HttpSentry,__destruct);
 void class_Pcap_load();
 #endif //LIBPCAP_ZEND_LIBPCAP_H
 

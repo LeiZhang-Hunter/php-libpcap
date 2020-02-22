@@ -8,7 +8,7 @@ PCAP_BOOL gzip_decompress(void* context,size_t decompress_size)
     z_stream stream;
     bzero(&stream, sizeof(stream));
     zend_string* html_buf;
-    zend_string* result = http_sentry_container->html_body;
+    zend_string* result = NG(http_sentry_handle)->html_body;
 
     if(inflateInit2(&stream,16+MAX_WBITS) != Z_OK)
     {
@@ -35,13 +35,13 @@ PCAP_BOOL gzip_decompress(void* context,size_t decompress_size)
 
         //装填进入缓冲区
         buf_len = strlen(chunk);
-        extend_len = http_sentry_container->html_size + buf_len;
+        extend_len = NG(http_sentry_handle)->html_size + buf_len;
         //扩容字符串
         result = zend_string_extend(result,extend_len,0);
-        memcpy(ZSTR_VAL(result)+http_sentry_container->html_size,chunk,buf_len);
-        http_sentry_container->html_size += buf_len;
+        memcpy(ZSTR_VAL(result)+NG(http_sentry_handle)->html_size,chunk,buf_len);
+        NG(http_sentry_handle)->html_size += buf_len;
     }while (ret == Z_OK);
-    http_sentry_container->html_body = zend_string_extend(result,0,0);
+    NG(http_sentry_handle)->html_body = zend_string_extend(result,0,0);
     inflateEnd(&stream);
     php_printf("buf:%s\n",ZSTR_VAL(result));
     if(ret == Z_STREAM_END)

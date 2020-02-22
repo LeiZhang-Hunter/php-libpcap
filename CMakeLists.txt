@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 
 #定义php源码路径，这里根据自己的真实路径来更改
-set(PHP_SOURCE /home/zhanglei/ourc/php-7.3.11)
+set(PHP_SOURCE /home/zhanglei/ourc/php-7.3.4)
 # Add -O0 to remove optimizations when using gcc
 IF(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
@@ -30,7 +30,17 @@ set(SOURCE_FILES
         zend/zend_libpcap.c
         zend/zend_pcap.c
         pcap_tool/pcap_lib.c
-        common/ether.h common/ip_struct.h common/tcp_struct.h pcap_tool/http_parse.h pcap_tool/http_parse.c pcap_tool/gzip_tool.h pcap_tool/gzip_tool.c)
+        pcap_tool/ether_packet.h
+        pcap_tool/ether_packet.c
+        pcap_tool/http_parse.h
+        pcap_tool/http_parse.c
+        pcap_tool/pcap_lib.h
+        pcap_tool/gzip_tool.h
+        pcap_tool/gzip_tool.c
+        pcap_tool/node_sentry.c
+        pcap_tool/tcp_packet.c
+        pcap_tool/ip_packet.c
+        )
 
 add_executable(libpcap ${SOURCE_FILES})
 #CFLAGS='-g -O0'

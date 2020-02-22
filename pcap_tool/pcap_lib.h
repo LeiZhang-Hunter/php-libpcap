@@ -7,46 +7,40 @@
 
 
 #include "ether_packet.h"
+#include "http_parse.h"
 
-#define PCAP_BOOL int
-#define PCAP_FALSE -1
-#define PCAP_TRUE 0
-typedef struct _pcap_dev_config{
-    char* name;//设备名字
-    int flag;//设备模式
-    int timeout;
-}pcap_dev_config;
+
 
 typedef struct _pcap_module{
     uint8_t loop_state;//运行状态防止一个进程中重复运行
-    int max_packet_num;
+    long max_packet_num;
     zend_string* dev_name;
     pcap_if_t* (*find_all_devs)();
-    ether_packet* eth_packet;
     void (*packer_handle)(u_char *param, const struct pcap_pkthdr *header,const u_char *data);
+    PCAP_BOOL (*pcap_config_check)(zval* config);
+    PCAP_BOOL (*pcap_if_t_to_zend_hash)(pcap_if_t* alldevs,HashTable* table);
     PCAP_BOOL (*free_all_devs)(pcap_if_t* alldevs);
     PCAP_BOOL (*loop)(void* pcaket_handle);
     char err_buf[PCAP_ERRBUF_SIZE];
 }pcap_module;
 
-typedef struct ethhdr ether_header;
-
-typedef struct ip ip_header;
-
-typedef struct tcphdr tcp_header;
-
-pcap_module pcap_factory;
-
-PCAP_BOOL pcap_lib_init();
-
+PCAP_BOOL pcap_lib_init(pcap_module* pcap_lib);
 //发现所有的设备
 pcap_if_t* pcap_find_all_devs();
-
 PCAP_BOOL pcap_free_all_devs(pcap_if_t*);
 
-PCAP_BOOL _packet_ether();
+PCAP_BOOL pcap_if_t_to_zend_hash(pcap_if_t* alldevs,HashTable* table);
 
-PCAP_BOOL loop(void* pcaket_handle);
+/**
+ * 检查加载php层面的配置文件是否正确,如果说存在配置项挂载到配置属性上
+ * @param config
+ * @param object
+ * @param object_ce
+ * @return
+ */
+PCAP_BOOL pcap_config_check(zval* config);
+
+PCAP_BOOL pcap_set_packet_handle(pcap_t* handle);
 
 #endif //LIBPCAP_PCAP_LIB_H
 

@@ -1,17 +1,19 @@
 //
-// Created by root on 2020/1/7.
+// Created by root on 20-2-21.
 //
 
-#ifndef LIBPCAP_TCP_STRUCT_H
-#define LIBPCAP_TCP_STRUCT_H
-
+#ifndef LIBPCAP_TCP_PACKET_H
+#define LIBPCAP_TCP_PACKET_H
+# define _TCP_FLAGS "flags"
 # define _TCP_SPORT "src_port"
 # define _TCP_DPORT "dest_port"
 # define _TCP_TH_SEQ "seq"
 # define _TCP_TH_ACK "ack"
 # define _TCP_WINDOW "window"
-# define _TCP_CHECK "check"
-# define _TCP_URG_PTR "urg_ptr"
+# define _TCP_SUM "sum"
+# define _TCP_URG "urg"
+# define _TCP_SEGMENT "segment"
+# define _TCP_PACKET "tcp"
 
 struct tcphdr {
     uint16_t th_sport;       /* source port */
@@ -34,5 +36,26 @@ struct tcphdr {
     uint16_t th_sum;         /* checksum */
     uint16_t th_urp;         /* urgent pointer */
 };
+typedef struct tcphdr tcp_header;
+typedef struct _tcp_packet_data{
+    uint8_t flags;
+    uint16_t source_port;
+    uint16_t dest_port;
+    uint16_t win;
+    uint16_t sum;
+    uint16_t urp;
+    uint32_t seq;
+    uint32_t ack;
+    int header_len;
+    size_t payload_size;
+    const u_char* payload;
+    PCAP_BOOL (*parse)(const u_char* pcaket);
+    void (*finish)();
+    void (*dtor)();
+}tcp_packet;
 
-#endif //LIBPCAP_TCP_STRUCT_H
+PCAP_BOOL init_tcp_packet(tcp_packet*);
+PCAP_BOOL tcp_parse(const u_char* pcaket);
+void tcp_packet_dtor();
+void tcp_packet_finish();
+#endif //LIBPCAP_TCP_PACKET_H
