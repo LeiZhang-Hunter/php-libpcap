@@ -3,22 +3,22 @@
 //
 #include "common.h"
 //解压gzip
-PCAP_BOOL gzip_decompress(void* context,size_t decompress_size)
+zend_string* gzip_decompress(u_char* context,uint decompress_size)
 {
     z_stream stream;
+    bzero(&stream,sizeof(z_stream));
     bzero(&stream, sizeof(stream));
-    zend_string* html_buf;
-    zend_string* result = NG(http_sentry_handle)->html_body;
-
+    zend_string* html_buf = NULL;
+    zend_string* result = NULL;
+    size_t html_size = 0;
     if(inflateInit2(&stream,16+MAX_WBITS) != Z_OK)
     {
-        return PCAP_FALSE;
+        return NULL;
     }
     char chunk[BUFSIZ];
     size_t buf_len = 0;
 
     int ret;
-    char* html;
     size_t extend_len;
     stream.next_in = (Bytef *)context;
     stream.avail_in = decompress_size;
@@ -26,7 +26,7 @@ PCAP_BOOL gzip_decompress(void* context,size_t decompress_size)
     do {
         bzero(chunk, sizeof(chunk));
         stream.next_out = (Bytef *)chunk;
-        stream.avail_out = sizeof(chunk);
+        stream.avail_out = sizeof(chunk)-1;
         ret = inflate(&stream,Z_NO_FLUSH);
         if(ret < Z_OK)
         {
@@ -35,17 +35,18 @@ PCAP_BOOL gzip_decompress(void* context,size_t decompress_size)
 
         //装填进入缓冲区
         buf_len = strlen(chunk);
-        extend_len = NG(http_sentry_handle)->html_size + buf_len;
-        //扩容字符串
-        result = zend_string_extend(result,extend_len,0);
-        memcpy(ZSTR_VAL(result)+NG(http_sentry_handle)->html_size,chunk,buf_len);
-        NG(http_sentry_handle)->html_size += buf_len;
+        if(!html_buf)
+        {
+            html_buf = zend_string_init(chunk,stream.total_out,0);
+        }else{
+            extend_len = stream.total_out;
+            //扩容字符串
+            result = zend_string_extend(html_buf,extend_len,0);
+            memcpy(ZSTR_VAL(result)+html_size,chunk,buf_len);
+            html_buf = result;//重置方便下次继续拼接
+        }
+        html_size += buf_len;
     }while (ret == Z_OK);
-    NG(http_sentry_handle)->html_body = zend_string_extend(result,0,0);
     inflateEnd(&stream);
-    php_printf("buf:%s\n",ZSTR_VAL(result));
-    if(ret == Z_STREAM_END)
-        return PCAP_FALSE;
-    else
-        return PCAP_TRUE;
+    return result ? result : html_buf;
 }

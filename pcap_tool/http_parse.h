@@ -11,7 +11,7 @@ enum {
     FOUND_HTTP_VALUE_POSITION,
     COMPILE_HTTP_VALUE_POSITION,
     HTTP_BEGIN_LENGTH,//开始计算包长度
-    HTTP_START_GZIP,//开始计算主题内容
+    HTTP_GZIP,//开始计算主题内容
     SECOND_CR,
     SECOND_LF,
     CHUNK_FOUND_BODY_BEGIN,
@@ -35,7 +35,8 @@ enum {
 #define CR '\r'
 #define LF '\n'
 #define EOS '\0' //end of string 的缩写
-
+#define HTML "html"
+#define CHUNK_SIZE "chunk_size"
 #define CURRENT_OFFSET_KEY_BEGIN() offset_key_begin
 #define CURRENT_OFFSET_KEY_END() offset_key_end
 #define CURRENT_OFFSET_VALUE_BEGIN() offset_value_begin
@@ -72,33 +73,23 @@ typedef struct _http_sentry{
     uint16_t dest_port;
     HashTable* (*get_auto_http_table)();//进入http table
     PCAP_BOOL (*on_request)(const u_char* context,size_t segment);
+    PCAP_BOOL (*on_chunk)(const u_char* context,size_t segment);
+    PCAP_BOOL (*on_body)(const u_char* context,size_t segment);
     PCAP_BOOL (*auto_set_chunk)(uint8_t chunk_flag);//进入http table
     PCAP_BOOL (*auto_set_gzip)(uint8_t gzip_flag);//进入http table
     PCAP_BOOL (*auto_join_http_table)();//进入http table
     PCAP_BOOL (*auto_leave_http_table)();//进入http table
     zval* (*get_auto_http_table_zval)();
     PCAP_BOOL (*auto_set_http_table_str)(char* key,char* value);
-    PCAP_BOOL (*start)();
-    PCAP_BOOL (*stop)();
+    PCAP_BOOL (*check_chunk_footer)(u_char* context,size_t segment);
+    PCAP_BOOL (*fill_html)(zend_string* html);
     void (*finish)();
     void (*dtor)();
     PCAP_BOOL (*parse)(const u_char* context,size_t context_size);
-    int (*auto_get_chunk)();
-    int (*auto_get_gzip)();
-    size_t html_size;//html的尺寸
-    /**
-     *
-     * ["ip:port_ip:port"]=>
-     * [
-     *  "chunk_flag"=>"",
-     *  "gzip_flag"=>"",
-     *  "ctime"=>"",
-     *  "body"=>""
-     * ]
-     *
-     */
+    PCAP_BOOL (*auto_get_chunk)();
+    PCAP_BOOL (*auto_get_gzip)();
+    PCAP_BOOL (*on_response)(const u_char* context,size_t segment);
     zval* http_array_table;//这是一个http的消息块，用来存储html的,用来存储chunk的标识，因为http有chunk
-    zend_string* html_body;//html的消息体 这里用柔性数组，用来存储不定长的html
     char hash_key[64];//自动生成散列表单元的时候会生成这个key
 }http_sentry;
 
@@ -118,6 +109,11 @@ int _auto_get_gzip();
 HashTable* _get_auto_http_table();
 PCAP_BOOL _auto_set_http_table_str(char* key,char* value);
 PCAP_BOOL _on_request(const u_char* context,size_t segment);
+PCAP_BOOL _on_response(const u_char* context,size_t segment);
+PCAP_BOOL _on_chunk(const u_char* context,size_t segment);
+PCAP_BOOL _on_body(const u_char* context,size_t segment);
+PCAP_BOOL _check_chunk_footer(u_char* context,size_t segment);
+PCAP_BOOL _fill_html(zend_string* html);
 zval* _get_auto_http_table_zval();
 void _http_sentry_dtor();
 void _http_sentry_finish();

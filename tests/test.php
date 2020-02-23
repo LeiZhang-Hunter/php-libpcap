@@ -8,7 +8,9 @@ $pcap->setConfig([
     "max_packet_num"=>10000
 ]);
 $pcap->onReceive(function($data) use($pcap){
-    var_dump($data);
+    if(isset($data["http"]["html"])){
+        var_dump($data["http"]["html"]);
+    }
 });
 $r = $pcap->monitor();
 //var_dump($r);

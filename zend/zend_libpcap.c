@@ -187,7 +187,7 @@ PHP_METHOD(HttpSentry,monitor)
     res = pcap_loop(pcap_handle,(int)NG(pcap_lib)->max_packet_num,zend_pcaket_handle,NULL);
     if(EXPECTED(res != 0))
     {
-        zend_throw_error(NULL,"%s\n",pcap_geterr(pcap_handle));
+        zend_throw_error(NULL,"222:%s\n",pcap_geterr(pcap_handle));
         RETURN_FALSE
     }
 }
