@@ -10,6 +10,8 @@
 
 ######安装(注意本人是使用php7.3作为php版本,开发环境为ubuntu)
 
+在安装前 请检查zlib库和 pcap库是否做了安装
+
 ```
     phpize && ./configure --with-php-config 地址 && make && make install
 ```
