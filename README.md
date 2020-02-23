@@ -8,7 +8,7 @@
 
 ####如何安装这个扩展?
 
-######安装
+######安装(注意本人是使用php7.3作为php版本,开发环境为ubuntu)
 
 ```
     phpize && ./configure --with-php-config 地址 && make && make install
